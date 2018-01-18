@@ -1,0 +1,38 @@
+web:
+  restart: always
+  build: ./web
+  expose:
+    - "9090"
+  links:
+    - postgres:postgres
+  volumes:
+    - /usr/src/app/static
+  env_file: .env
+  command: /usr/local/bin/gunicorn -w 2 -b :9090 app:app
+
+nginx:
+  restart: always
+  build: ./nginx/
+  ports:
+    - "9090:9090"
+  volumes:
+    - /www/static
+  volumes_from:
+    - web
+  links:
+    - web:web
+
+data:
+  restart: always
+  image: postgres:latest
+  volumes:
+    - /var/lib/postgresql
+  command: "true"
+
+postgres:
+  restart: always
+  image: postgres:latest
+  volumes_from:
+    - data
+  ports:
+    - "5432:5432"
